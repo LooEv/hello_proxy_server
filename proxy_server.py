@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-
+import json
 import asyncio
 from queue import Queue
 from collections import defaultdict
@@ -31,16 +31,17 @@ class WebServer:
     def get_proxy(self, request):
         https = request.query.get('https', 'false')
         anonymous = request.query.get('anonymous', 'true')
+        proxy_format = request.query.get('format', 'text')
         try:
             limit = int(request.query.get('limit', DEFAULT_FETCH_PROXY_LIMIT))
             limit = min(limit, MAX_FETCH_PROXY_LIMIT)
         except ValueError:
             limit = DEFAULT_FETCH_PROXY_LIMIT
-        proxies = self._choice_proxy(https, anonymous, limit)
-        return web.Response(text='\r\n'.join(proxies))
+        proxies = self._choice_proxy(https, anonymous, proxy_format, limit)
+        return web.Response(text=proxies)
 
     @staticmethod
-    def _choice_proxy(https, anonymous, limit=DEFAULT_FETCH_PROXY_LIMIT):
+    def _choice_proxy(https, anonymous, proxy_format='text', limit=DEFAULT_FETCH_PROXY_LIMIT):
         if https == 'true':
             protocol_list = ['https']
         else:
@@ -54,11 +55,16 @@ class WebServer:
                 break
             if proxy.protocol in protocol_list and anonymous == proxy.anonymous:
                 proxy.used_times += 1
-                # result.append(proxy.to_dict())
-                result.append(f'{proxy.ip}:{proxy.port}')
+                if proxy_format == 'json':
+                    result.append(proxy.to_dict())
+                else:
+                    result.append(f'{proxy.ip}:{proxy.port}')
                 proxy_source_count[proxy.source] += 1
         logger.info(f'succeed to fetch {len(result)} proxies: {dict(proxy_source_count)}')
-        return result
+        if proxy_format == 'json':
+            return json.dumps(result)
+        else:
+            return '\r\n'.join(result)
 
 
 async def proxy_server(loop):
