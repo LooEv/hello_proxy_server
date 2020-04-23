@@ -32,9 +32,10 @@ def get_current_ip():
 
 
 class Validator:
-    def __init__(self, task_queue: Queue, proxy_set: set):
+    def __init__(self, task_queue: Queue, proxy_dict: dict, spider_name_proxy_dict: dict):
         self.task_queue = task_queue
-        self.proxy_set = proxy_set
+        self.proxy_dict = proxy_dict
+        self.spider_name_proxy_dict = spider_name_proxy_dict
         self.running = True
         self.client_session = None
         self.time = int(time.time())
@@ -48,10 +49,13 @@ class Validator:
             while self.running:
                 now = int(time.time())
                 if now - self.time > 45:
-                    for proxy in copy.deepcopy(self.proxy_set):
-                        if now - proxy.validate_time > 45:
+                    for ip, proxy in copy.deepcopy(self.proxy_dict).items():
+                        if proxy.used_times >= 20:
+                            logger.warning(f'{proxy.proxy_url} used_times >= 20, remove it!')
+                            self.proxy_dict.pop(ip, '')
+                        elif now - proxy.validate_time > 45:
                             logger.info('re_validate ' + proxy.ip)
-                            self.proxy_set.remove(proxy)
+                            # self.proxy_dict.pop(ip, '')
                             self.task_queue.put(proxy)
                     self.time = int(time.time())
 
@@ -88,10 +92,15 @@ class Validator:
                 if response.status == 200:
                     if json.loads(body)['ip'] != get_current_ip():
                         proxy.anonymous = True
-                    if proxy.used_times >= 100:  # 防止一个ip长期有效的情况下使用次数无限增长
-                        proxy.used_times = 0
                     proxy.validate_time = int(time.time())
-                    self.proxy_set.add(proxy)
+                    proxy.used_times += 1
+                    self.proxy_dict[proxy.ip] = proxy
                     logger.info(f'[{proxy.source}]>{proxy_url} validate successfully')
+                    for proxy_dict in self.spider_name_proxy_dict.values():
+                        proxy_dict.setdefault(proxy.ip, 0)
+                    return proxy
         except Exception:
             logger.warning(f'[{proxy.source}]>{proxy_url} validate invalidly')
+            for proxy_dict in self.spider_name_proxy_dict.values():
+                proxy_dict.pop(proxy.ip, '')
+            self.proxy_dict.pop(proxy.ip, '')

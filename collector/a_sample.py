@@ -24,5 +24,5 @@ class SomeProxyCollector(BaseProxyCollector):
                         proxy = Proxy(ip, port, int(time.time()), self.source,
                                       protocol='https', anonymous=True)
                         self.proxy_queue.put(proxy)
-        except Exception:
-            self.logger.warning(f'fetching [{self.source}] [{self.url}] failed!')
+        except Exception as e:
+            self.logger.warning(f'Fetching [{self.source}] [{self.url}] failed: {e}')

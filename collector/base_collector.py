@@ -26,7 +26,7 @@ class BaseProxyCollector:
         client_session = ClientSession()
         async with client_session as session:
             while self.running:
-                self.logger.info(f'fetching [{self.source}] proxy ...')
+                self.logger.info(f'Fetching [{self.source}] proxy ...')
                 await self._get_proxy(session)
                 await asyncio.sleep(self.fetch_proxy_interval)
 

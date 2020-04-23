@@ -7,10 +7,13 @@ PROXY_COLLECTOR_LIST = [
 ]
 
 SERVER_HOST = '0.0.0.0'
-SERVER_PORT = 5124
+SERVER_PORT = 8777
 
-DEFAULT_FETCH_PROXY_LIMIT = 10
-MAX_FETCH_PROXY_LIMIT = 20
+FETCH_PROXY_LIMIT = 10
+
+ENCRYPT_API = False  # 公网环境加密获取代理的接口
+
+SECRET_KEY = 'G34Cv9all0y'
 
 # log
 formatter_str = '%(asctime)s||%(levelname)s||%(filename)s->%(funcName)s %(lineno)-3d||%(message)s'

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import hashlib
 import inspect
 from importlib import import_module
 from pkgutil import iter_modules
@@ -22,3 +23,9 @@ def get_collector_classes():
                         and getattr(obj, 'source', None) in PROXY_COLLECTOR_LIST:
                     collector_cls_list.append(obj)
     return collector_cls_list
+
+
+def calc_str_md5(strings: str, encoding='utf-8'):
+    md5_obj = hashlib.md5()
+    md5_obj.update(strings.encode(encoding=encoding))
+    return md5_obj.hexdigest()
