@@ -11,6 +11,8 @@ from collections import defaultdict
 from random import shuffle
 from aiohttp import web
 
+import sys; sys.path.append('..')
+
 from hello_proxy_server.utils import get_collector_classes
 from hello_proxy_server.utils import calc_str_md5
 from hello_proxy_server.validator import Validator
